@@ -1,4 +1,5 @@
 import { apiFetch } from './client';
+import { IMAGE_BASE_URL } from './config';
 
 /** Mirrors the canonical `products` table in the backend schema. */
 export interface Product {
@@ -51,4 +52,13 @@ export async function listProducts(
 
 export function getProduct(publicId: string): Promise<Product> {
   return apiFetch<Product>(`/products/${publicId}`);
+}
+
+/**
+ * Resolve a product's `image_path` to a full public image URL.
+ * Returns `null` when the product has no image.
+ */
+export function productImageUrl(imagePath: string | null): string | null {
+  if (!imagePath) return null;
+  return `${IMAGE_BASE_URL}/${imagePath}`;
 }

@@ -22,3 +22,16 @@ function resolveDefaultBaseUrl(): string {
 
 export const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL?.replace(/\/+$/, '') ?? resolveDefaultBaseUrl();
+
+/**
+ * Base URL for product images.
+ *
+ * Images live in the PUBLIC Supabase storage bucket `smartsupply`, keyed by
+ * filename (`{sku}.webp`). The public object URL is
+ * `{SUPABASE_URL}/storage/v1/object/public/smartsupply/{image_path}`.
+ *
+ * Override with the EXPO_PUBLIC_IMAGE_BASE_URL env var if the bucket moves.
+ */
+export const IMAGE_BASE_URL =
+  process.env.EXPO_PUBLIC_IMAGE_BASE_URL?.replace(/\/+$/, '') ??
+  'https://httjlxlxrkwpqqqfojgt.supabase.co/storage/v1/object/public/smartsupply';

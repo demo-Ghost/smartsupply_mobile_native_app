@@ -1,14 +1,18 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, ScrollView, StyleSheet } from 'react-native';
+import { Spinner, Text, YStack } from 'tamagui';
 
-import { getProduct } from '../api/products';
+import { getProduct, productImageUrl } from '../api/products';
 import type { RootStackParamList } from '../navigation/types';
+import { colors, radius } from '../theme/tokens';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ProductDetail'>;
 
 export function ProductDetailScreen({ route }: Props) {
   const { publicId } = route.params;
+  const [imageFailed, setImageFailed] = useState(false);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['products', publicId],
@@ -17,71 +21,96 @@ export function ProductDetailScreen({ route }: Props) {
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" />
-      </View>
+      <YStack flex={1} ai="center" jc="center" backgroundColor={colors.cream}>
+        <Spinner size="large" color={colors.blue} />
+      </YStack>
     );
   }
 
   if (isError || !data) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>
-          Couldn’t load product: {(error as Error)?.message ?? 'Not found'}
+      <YStack
+        flex={1}
+        ai="center"
+        jc="center"
+        padding="$5"
+        backgroundColor={colors.cream}
+      >
+        <Text fontSize={14} color={colors.navy60} ta="center">
+          Δεν ήταν δυνατή η φόρτωση του προϊόντος: {(error as Error)?.message ?? 'Δεν βρέθηκε'}
         </Text>
-      </View>
+      </YStack>
     );
   }
 
+  const uri = productImageUrl(data.image_path);
+  const showImage = uri && !imageFailed;
+
   return (
-    <ScrollView contentContainerStyle={styles.content}>
-      <Text style={styles.title}>{data.title}</Text>
-      {data.brand ? <Field label="Brand" value={data.brand} /> : null}
-      {data.barcode ? <Field label="Barcode" value={data.barcode} /> : null}
-      {data.description ? <Field label="Description" value={data.description} /> : null}
-      <Field label="Published" value={data.is_published ? 'Yes' : 'No'} />
+    <ScrollView style={{ backgroundColor: colors.cream }} contentContainerStyle={styles.content}>
+      <YStack
+        height={220}
+        borderRadius={radius.card}
+        borderWidth={1}
+        borderColor={colors.navy10}
+        backgroundColor={colors.surface}
+        ai="center"
+        jc="center"
+        overflow="hidden"
+      >
+        {showImage ? (
+          <Image
+            source={{ uri }}
+            style={styles.image}
+            resizeMode="contain"
+            onError={() => setImageFailed(true)}
+          />
+        ) : (
+          <Text fontSize={48} fontWeight="700" color={colors.navy40}>
+            {data.title?.trim().charAt(0).toUpperCase() || '•'}
+          </Text>
+        )}
+      </YStack>
+
+      <Text fontSize={22} lineHeight={28} fontWeight="700" color={colors.navy}>
+        {data.title}
+      </Text>
+
+      {data.brand ? <Field label="Μάρκα" value={data.brand} /> : null}
+      {data.barcode ? <Field label="Γραμμωτός κώδικας" value={data.barcode} /> : null}
+      {data.description ? <Field label="Περιγραφή" value={data.description} /> : null}
+      <Field label="Ζυγιζόμενο" value={data.is_weighted ? 'Ναι' : 'Όχι'} />
+      <Field label="Διαθέσιμο" value={data.is_published ? 'Ναι' : 'Όχι'} />
     </ScrollView>
   );
 }
 
 function Field({ label, value }: { label: string; value: string }) {
   return (
-    <View style={styles.field}>
-      <Text style={styles.fieldLabel}>{label}</Text>
-      <Text style={styles.fieldValue}>{value}</Text>
-    </View>
+    <YStack gap="$1">
+      <Text
+        fontSize={12}
+        fontWeight="600"
+        color={colors.navy60}
+        textTransform="uppercase"
+        letterSpacing={0.5}
+      >
+        {label}
+      </Text>
+      <Text fontSize={15} lineHeight={21} color={colors.navy}>
+        {value}
+      </Text>
+    </YStack>
   );
 }
 
 const styles = StyleSheet.create({
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-  },
   content: {
-    padding: 20,
+    padding: 16,
     gap: 16,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-  },
-  field: {
-    gap: 2,
-  },
-  fieldLabel: {
-    fontSize: 12,
-    textTransform: 'uppercase',
-    color: '#888',
-    letterSpacing: 0.5,
-  },
-  fieldValue: {
-    fontSize: 16,
-  },
-  errorText: {
-    color: '#b00020',
-    textAlign: 'center',
+  image: {
+    width: '100%',
+    height: '100%',
   },
 });
