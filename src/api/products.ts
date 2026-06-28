@@ -24,13 +24,22 @@ export interface ListProductsParams {
   offset?: number;
 }
 
-/**
- * NOTE: the backend product routes are not implemented yet. These
- * functions assume a conventional REST shape under `/products`. Adjust
- * the paths/response types once the endpoints exist.
- */
-export function listProducts(params: ListProductsParams = {}): Promise<Product[]> {
-  return apiFetch<Product[]>('/products', {
+export interface Pagination {
+  limit: number;
+  offset: number;
+  total: number;
+}
+
+/** The backend wraps list responses in `{ data, pagination }`. */
+export interface ListProductsResponse {
+  data: Product[];
+  pagination: Pagination;
+}
+
+export async function listProducts(
+  params: ListProductsParams = {},
+): Promise<ListProductsResponse> {
+  return apiFetch<ListProductsResponse>('/products', {
     query: {
       search: params.search,
       category_code: params.categoryCode,

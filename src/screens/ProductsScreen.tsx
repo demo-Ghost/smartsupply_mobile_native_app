@@ -46,7 +46,7 @@ export function ProductsScreen() {
 
   return (
     <FlatList<Product>
-      data={data ?? []}
+      data={data?.data ?? []}
       keyExtractor={(item) => item.public_id}
       contentContainerStyle={styles.listContent}
       refreshing={isRefetching}
